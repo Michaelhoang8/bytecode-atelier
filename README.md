@@ -4,6 +4,10 @@ A browser-local compiler workbench for a small arithmetic language. Write source
 
 ![Bytecode Atelier workbench](docs/workbench.png)
 
+## Interface
+
+The debugger keeps source, bytecode, and machine state in adjacent panes. A shared toolbar compiles, runs, steps, reverses, and resets execution. The source editor has synchronized line numbers, and the active instruction scrolls into view. Variables and output remain visible while stepping; compiler artifacts and file/language controls open separately. Narrow screens place machine state below the two code panes.
+
 ## Start
 
 ```sh
@@ -18,7 +22,7 @@ Open http://127.0.0.1:8000/. Python 3.11+ is sufficient to serve the app; there 
 2. Step once to push the price, then step again to store it. Inspect the stack and variables.
 3. Run to the end. The sample prints `80` and `26.666666666666668`.
 4. Use Back to reverse instructions, including printed output and variable assignments.
-5. Choose **A deliberate error**. Execution prints `12`, then stops at division by zero and selects the `/` token in the editor. The previous output remains.
+5. Choose **Division by zero**. Execution prints `12`, then stops at division by zero and selects the `/` token in the editor. The previous output remains.
 
 Ctrl/⌘ + Enter compiles and runs. Source-location buttons select their original token. Source files and complete JSON reports can be downloaded; opening a UTF-8 `.atelier` or text file preserves its contents without running it. A delayed import cannot overwrite edits or a newer selection.
 
