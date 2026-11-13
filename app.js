@@ -2,11 +2,11 @@ import { compile, Machine, Diagnostic } from './core.js';
 const $ = (id) => document.getElementById(id);
 const examples = {
   arithmetic:
-    '// A small calculation, made visible.\nlet price = 24;\nlet quantity = 3;\nlet postage = 2 + 3 * 2;\n\nlet total = price * quantity + postage;\nprint total;\nprint total / quantity;',
+    'let price = 24;\nlet quantity = 3;\nlet postage = 2 + 3 * 2;\n\nlet total = price * quantity + postage;\nprint total;\nprint total / quantity;',
   state:
-    '// Follow a value as it changes.\nlet balance = 100;\nlet deposit = 25 + 5;\nbalance = balance + deposit;\nprint balance;\n\nbalance = balance - 18;\nprint balance;',
+    'let balance = 100;\nlet deposit = 25 + 5;\nbalance = balance + deposit;\nprint balance;\n\nbalance = balance - 18;\nprint balance;',
   failure:
-    '// The first result survives the error.\nlet numerator = 12;\nprint numerator;\n\nlet denominator = 3 - 3;\nprint numerator / denominator;\nprint 99;',
+    'let numerator = 12;\nprint numerator;\n\nlet denominator = 3 - 3;\nprint numerator / denominator;\nprint 99;',
 };
 let report = null,
   machine = null,
@@ -88,9 +88,7 @@ function codeRows() {
       td = document.createElement('td');
     td.colSpan = 3;
     td.className = 'empty';
-    td.textContent = report
-      ? 'No executable instructions.'
-      : 'Your source becomes a sequence of small, visible operations.';
+    td.textContent = report ? 'No executable instructions.' : 'No compiled instructions.';
     tr.append(td);
     body.append(tr);
     return;
@@ -122,11 +120,13 @@ function codeRows() {
     tr.append(pc, op, source);
     body.append(tr);
   }
+  body.querySelector('.current')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   $('page-range').textContent = `${from + 1}–${to} of ${report.code.length}`;
   $('previous').disabled = page === 0;
   $('next').disabled = to === report.code.length;
 }
 function render() {
+  lineNumbers();
   const state = machine?.snapshot();
   $('run').disabled = $('step').disabled = !machine || machine.halted;
   $('back').disabled = !machine || !machine.history.length;
@@ -258,3 +258,19 @@ document.addEventListener('keydown', (event) => {
 });
 $('source').value = examples.arithmetic;
 render();
+
+function lineNumbers() {
+  const source = $('source');
+  $('line-numbers').textContent = Array.from(
+    { length: source.value.split('\n').length },
+    (_, i) => i + 1,
+  ).join('\n');
+  $('line-numbers').scrollTop = source.scrollTop;
+}
+$('source').addEventListener('scroll', () => {
+  $('line-numbers').scrollTop = $('source').scrollTop;
+});
+for (const name of ['artifacts', 'guide']) {
+  $(name + '-open').addEventListener('click', () => $(name + '-panel').showModal());
+  $(name + '-close').addEventListener('click', () => $(name + '-panel').close());
+}

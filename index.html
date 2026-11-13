@@ -4,41 +4,42 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Bytecode Atelier</title>
-    <meta
-      name="description"
-      content="An inspectable compiler and reversible stack-machine debugger."
-    />
     <link rel="stylesheet" href="style.css" />
     <script type="module" src="app.js"></script>
   </head>
   <body>
-    <a class="skip" href="#workspace">Skip to compiler</a>
+    <a class="skip" href="#workspace">Skip to debugger</a>
     <header>
-      <a class="wordmark" href="./">b<span>a</span> / BYTECODE ATELIER</a
-      ><span class="local">IN YOUR BROWSER · NO UPLOADS</span
-      ><a href="https://github.com/Michaelhoang8/bytecode-atelier">Source ↗</a>
+      <h1>Bytecode Atelier</h1>
+      <nav>
+        <button id="artifacts-open">Compiler output</button
+        ><button id="guide-open">Files & language</button>
+      </nav>
     </header>
-    <main>
-      <section class="intro">
-        <p class="eyebrow">LANGUAGE SYSTEMS / AN OPEN WORKBENCH</p>
-        <h1>Every instruction<br />has a <em>beginning.</em></h1>
-        <p class="lead">
-          Write a little language. Follow its transformation.<br />See exactly what the machine does
-          next.
-        </p>
-      </section>
-      <div id="workspace" class="workspace" tabindex="-1">
-        <section class="source panel" aria-labelledby="source-title">
-          <div class="section-head">
-            <h2 id="source-title"><span>01</span> The source</h2>
-            <label class="example-label"
-              >Example<select id="examples">
-                <option value="arithmetic">A small calculation</option>
-                <option value="state">Changing state</option>
-                <option value="failure">A deliberate error</option>
-              </select></label
-            >
-          </div>
+    <div class="debug-toolbar">
+      <label class="example-label"
+        >Example<select id="examples">
+          <option value="arithmetic">Arithmetic</option>
+          <option value="state">Assignments</option>
+          <option value="failure">Division by zero</option>
+        </select></label
+      ><label class="check"
+        ><input id="optimize" type="checkbox" checked /> Fold constant expressions</label
+      >
+      <div class="execution">
+        <button id="compile" class="primary">Compile</button><button id="run" disabled>Run</button
+        ><button id="step" disabled>Step →</button><button id="back" disabled>← Back</button
+        ><button id="reset" disabled>Reset</button>
+      </div>
+    </div>
+    <main id="workspace" tabindex="-1">
+      <section class="source pane">
+        <div class="pane-heading">
+          <h2>Source</h2>
+          <span>.atelier</span>
+        </div>
+        <div class="editor">
+          <pre id="line-numbers" aria-hidden="true"></pre>
           <label for="source" class="sr-only">Program source</label
           ><textarea
             id="source"
@@ -48,99 +49,64 @@
             autocapitalize="off"
             aria-describedby="syntax-help"
           ></textarea>
-          <p id="syntax-help" class="hint">
-            let · assignment · print · + − × ÷ % · semicolons<br />Comments begin with //. Ctrl/⌘ +
-            Enter compiles and runs.
-          </p>
-          <div class="compile-row">
-            <label class="check"
-              ><input id="optimize" type="checkbox" checked /> Fold constant expressions</label
-            ><button id="compile" class="primary">Compile source <span>↗</span></button>
-          </div>
-          <div id="notice" role="status" aria-live="polite">Ready to explore.</div>
-          <details class="secondary">
-            <summary>Files & language guide</summary>
-            <div class="file-tools">
-              <label class="file"
-                >Open program<input
-                  id="file"
-                  type="file"
-                  accept=".atelier,.txt,text/plain" /></label
-              ><button id="save-source">Save source</button>
-            </div>
-            <p>
-              Declare a variable with <code>let count = 3;</code>, change it with
-              <code>count = count + 1;</code>, and display it with <code>print count;</code>. Names
-              are case-sensitive.
-            </p>
-            <p>
-              Decimal arithmetic uses JavaScript numbers, bounded to ±1e12. Division returns a
-              decimal; % is remainder. No loops, functions, strings, or network access. Source
-              limit: 32,000 characters; 4,000 tokens; 256 statements.
-            </p>
-          </details>
+        </div>
+        <p id="syntax-help">Ctrl / ⌘ + Enter · compile and run</p>
+      </section>
+      <section class="machine pane">
+        <div class="pane-heading">
+          <h2>Bytecode</h2>
+          <span id="phase">AWAITING SOURCE</span>
+        </div>
+        <div class="code-scroll" tabindex="0" role="region" aria-label="Bytecode instructions">
+          <table>
+            <thead>
+              <tr>
+                <th>PC</th>
+                <th>Instruction</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody id="code-list">
+              <tr>
+                <td colspan="3" class="empty">
+                  Your source becomes a sequence<br />of small, visible operations.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="pages" class="pagination" hidden>
+          <button id="previous">Previous</button><span id="page-range"></span
+          ><button id="next">Next</button>
+        </div>
+      </section>
+      <aside class="state pane">
+        <section>
+          <h2>Stack <small>bottom → top</small></h2>
+          <div id="stack" class="stack"></div>
         </section>
-        <section class="machine panel" aria-labelledby="machine-title">
-          <div class="section-head">
-            <h2 id="machine-title"><span>02</span> The machine</h2>
-            <span id="phase" class="phase">AWAITING SOURCE</span>
-          </div>
-          <div class="machine-toolbar">
-            <button id="run" disabled>Run to end</button><button id="step" disabled>Step →</button
-            ><button id="back" disabled>← Back</button><button id="reset" disabled>Reset</button>
-          </div>
-          <p id="metrics" class="metrics">Compile to inspect the instruction stream.</p>
-          <div class="code-scroll" tabindex="0" role="region" aria-label="Bytecode instructions">
-            <table>
-              <thead>
-                <tr>
-                  <th>PC</th>
-                  <th>Instruction</th>
-                  <th>Source</th>
-                </tr>
-              </thead>
-              <tbody id="code-list">
-                <tr>
-                  <td colspan="3" class="empty">
-                    Your source becomes a sequence<br />of small, visible operations.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div id="pages" class="pagination" hidden>
-            <button id="previous">Previous</button><span id="page-range"></span
-            ><button id="next">Next</button>
-          </div>
-          <div class="state-grid">
-            <section>
-              <h3>Stack <small>bottom → top</small></h3>
-              <div id="stack" class="stack"><span class="muted">Empty</span></div>
-            </section>
-            <section>
-              <h3>Output</h3>
-              <pre id="output" aria-label="Program output">Nothing printed yet.</pre>
-            </section>
-          </div>
-          <details class="secondary">
-            <summary>Variables & execution notes</summary>
-            <dl id="variables"></dl>
-            <p class="hint">
-              The highlighted row is the next instruction. Click a source location to select it in
-              the editor. Back restores up to 256 previous machine states. Runtime errors preserve
-              the stack and earlier output.
-            </p>
-          </details>
+        <section>
+          <h2>Variables</h2>
+          <dl id="variables"></dl>
         </section>
-      </div>
+        <section class="output-pane">
+          <h2>Output</h2>
+          <pre id="output" aria-label="Program output"></pre>
+        </section>
+      </aside>
+    </main>
+    <footer>
+      <p id="notice" role="status" aria-live="polite"></p>
+      <p id="metrics"></p>
+    </footer>
+    <dialog id="artifacts-panel" aria-label="Compiler output">
+      <button id="artifacts-close" class="close" aria-label="Close compiler output">×</button>
       <section class="artifacts">
         <div class="section-head">
-          <h2><span>03</span> Between source and machine</h2>
-          <button id="export" disabled>Export compiler report ↓</button>
+          <h2>Compiler output</h2>
+          <button id="export" disabled>Export report</button>
         </div>
-        <p class="hint">
-          Inspect the intermediate structures. Everything stays on this page unless you export it.
-        </p>
+
         <div class="artifact-grid">
           <details>
             <summary>Token stream <span id="token-count">—</span></summary>
@@ -156,9 +122,27 @@
           </details>
         </div>
       </section>
-      <footer>
-        <span>Bytecode Atelier</span><span>A small language. An inspectable machine.</span>
-      </footer>
-    </main>
+    </dialog>
+    <dialog id="guide-panel" aria-label="Files and language">
+      <button id="guide-close" class="close" aria-label="Close files and language">×</button>
+      <details class="secondary" open>
+        <summary>Files & language guide</summary>
+        <div class="file-tools">
+          <label class="file"
+            >Open program<input id="file" type="file" accept=".atelier,.txt,text/plain" /></label
+          ><button id="save-source">Save source</button>
+        </div>
+        <p>
+          Declare a variable with <code>let count = 3;</code>, change it with
+          <code>count = count + 1;</code>, and display it with <code>print count;</code>. Names are
+          case-sensitive.
+        </p>
+        <p>
+          Decimal arithmetic uses JavaScript numbers, bounded to ±1e12. Division returns a decimal;
+          % is remainder. No loops, functions, strings, or network access. Source limit: 32,000
+          characters; 4,000 tokens; 256 statements.
+        </p>
+      </details>
+    </dialog>
   </body>
 </html>
